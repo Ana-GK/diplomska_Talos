@@ -1,0 +1,9 @@
+# Talos .xml model for MuJoCo
+
+/home/cobotat4/robotblockset/Haptix/models/Talos.xml
+
+
+# problem za force sensorje - niso v istem omrežju?
+
+FT1 = ati_ft('Host','192.168.1.30')
+FT1.Update

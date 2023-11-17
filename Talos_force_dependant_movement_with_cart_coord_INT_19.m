@@ -280,6 +280,8 @@ F_values_for_plot = zeros(3000,3); % With frequency 10 HZ, for 5 min
 loop_count = 0;
 time_of_iterations = zeros(3000,1);
 time_of_parts = zeros(3000,8);
+time_of_ik = zeros(3000,1);
+time_of_ik_parts = zeros(3000,5);
 quat=zeros(2,4);
 
 previous_joints = msg_states; % initialize variable previous_joints
@@ -294,6 +296,8 @@ F_off_z = 14.61;
 tftree = rostf;
 pause(2)
 
+% create rosservice client
+ik_client = rossvcclient("/compute_ik",'moveit_msgs/GetPositionIK');
 % start timer
 tic;
 
@@ -302,6 +306,8 @@ while strcmp(swi1.Value,'On') % While the button is on
 
     loop_count = loop_count+1;
     time1 = toc;
+    t1=0;
+    times=[0 0 0 0 0];
     time_of_iterations(loop_count) = time1;
 
     % read the forces
@@ -425,7 +431,12 @@ while strcmp(swi1.Value,'On') % While the button is on
     time5 = toc;
 
     if any(forces_Talos) && ~stop
-        [LArm, RArm] = compute_joint_positions(new_cart_position,previous_joints,d_ik); % delta_x is the move size
+
+        a=tic;
+        [LArm, RArm, times] = compute_joint_positions(new_cart_position,previous_joints,d_ik,ik_client); % delta_x is the move size
+        disp(times);
+        t1=toc(a);
+
         force_index = find(forces_Talos); % finds index of each non-zero force
         fprintf("Moving in ")
         if any(force_index == 1)
@@ -485,9 +496,18 @@ while strcmp(swi1.Value,'On') % While the button is on
 
     previous_joints = new_joints;
 
-    time_of_parts(loop_count,:) = [change time1 time6 time6 time6 time7 time6 time7];
+    time_of_parts(loop_count,:) = [change time1 time2 time3 time4 time5 time6 time7];
+    time_of_ik(loop_count) = t1;
+    time_of_ik_parts(loop_count,:) = [times];
 
 end
+
+
+
+time_of_ik=time_of_ik(1:loop_count-1);
+
+time_of_ik_parts = time_of_ik_parts(1:loop_count-1,:);
+
 
 time_loops = nonzeros(time_of_iterations);
 
@@ -508,9 +528,13 @@ end
 min(tab)
 max(tab)
 
-plot([1:length(tab)],tab,'LineWidth',2)
+figure(1)
+hold on;
+plot([1:length(tab)],tab,'LineWidth',2,'DisplayName','loop-time')
+plot([1:length(time_of_ik)],time_of_ik,'LineWidth',3,'DisplayName','function compute\_joint\_positions')
+legend;
 
-tabela(1,:)=time_parts(1,:);
+tabela(:,1)=time_parts(:,1);
 for j=2:7
     for i=1:length(time_parts)
         tabela(i,j) = time_parts(i,j+1)-time_parts(i,j);
@@ -519,14 +543,26 @@ end
 
 tabela=abs(tabela);
 
+figure(2)
 hold on
-plot([1:length(time_parts)],tabela(:,1),'LineWidth',2)
-plot([1:length(time_parts)],tabela(:,2),'LineWidth',2,'Marker','o')
-plot([1:length(time_parts)],tabela(:,3),'LineWidth',2,'Marker','o')
-plot([1:length(time_parts)],tabela(:,4),'LineWidth',2,'Marker','o')
-plot([1:length(time_parts)],tabela(:,5),'LineWidth',2,'Marker','o')
-plot([1:length(time_parts)],tabela(:,6),'LineWidth',2,'Marker','o')
-plot([1:length(time_parts)],tabela(:,7),'LineWidth',2,'Marker','o')
+plot([1:length(tab)],tab,'LineWidth',2,'DisplayName','loop-time')
+% plot([1:length(time_parts)],tabela(:,1),'LineWidth',2,'DisplayName','IK-computing')
+plot([1:length(time_parts)],tabela(:,2),'LineWidth',2,'Marker','o','DisplayName','time1-time2')
+plot([1:length(time_parts)],tabela(:,3),'LineWidth',2,'Marker','o','DisplayName','time2-time3')
+plot([1:length(time_parts)],tabela(:,4),'LineWidth',2,'Marker','o','DisplayName','time3-time4')
+plot([1:length(time_parts)],tabela(:,5),'LineWidth',2,'Marker','o','DisplayName','time4-time5')
+plot([1:length(time_parts)],tabela(:,6),'LineWidth',2,'Marker','o','DisplayName','time5-time6')
+plot([1:length(time_parts)],tabela(:,7),'LineWidth',2,'Marker','o','DisplayName','time6-time7')
+legend;
+
+figure(3)
+hold on
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,1),'LineWidth',2,'Marker','o','DisplayName','time0-time1')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,2),'LineWidth',2,'Marker','o','DisplayName','time1-time2')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,3),'LineWidth',2,'Marker','o','DisplayName','time2-time3')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,4),'LineWidth',2,'Marker','o','DisplayName','time3-time4')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,5),'LineWidth',2,'Marker','o','DisplayName','time4-time5')
+legend;
 
 % Display changes in joint positions that occured during the program run
 

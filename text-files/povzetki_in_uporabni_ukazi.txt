@@ -1,0 +1,5 @@
+# generating kinnematic model with function gen_kinmodel_urdf_matlab.m
+
+# needs initial and final link in the tree of links for a specific part (arm, leg ...)
+
+gen_kinmodel_urdf_matlab('talos_right_leg','TALOS','talos.urdf','base_link','leg_right_6_link')

@@ -1,0 +1,8 @@
+rostopic info % list subscribers to this topic
+
+rostopic type % type of message
+
+
+% get joint limit descriptions (when working with whole_body_kinematic_controller)
+rostopic echo /whole_body_kematic_controller/joint_limit_task/joint_limits/parameter_descriptions
+

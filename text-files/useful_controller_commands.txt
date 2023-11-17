@@ -1,0 +1,99 @@
+### view all active controllers
+
+rosservice call /controller_manager/list_controllers
+
+
+### publish to a joint controller
+
+rostopic pub /left_leg_controller/command trajectory_msgs/JointTrajectory "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+joint_names:
+- ''
+points:
+- positions: [0]
+  velocities: [0]
+  accelerations: [0]
+  effort: [0]
+  time_from_start: {secs: 0, nsecs: 0}"
+  
+### start wbc_controller
+
+roslaunch talos_wbc talos_wbc.launch
+
+
+### publish to a wbc controller
+
+root@cobotat4:/home/user/exchange# rostopic pub /whole_body_kinematic_controller/
+
+/whole_body_kinematic_controller/base_link_orientation/parameter_descriptions
+/whole_body_kinematic_controller/base_link_orientation/parameter_updates
+/whole_body_kinematic_controller/com_XY/com_task_XY/parameter_descriptions
+/whole_body_kinematic_controller/com_XY/com_task_XY/parameter_updates
+/whole_body_kinematic_controller/joint_limit_task/joint_limits/parameter_descriptions
+/whole_body_kinematic_controller/joint_limit_task/joint_limits/parameter_updates
+/whole_body_kinematic_controller/joint_states
+/whole_body_kinematic_controller/left_foot_constraint/parameter_descriptions
+/whole_body_kinematic_controller/left_foot_constraint/parameter_updates
+/whole_body_kinematic_controller/markers
+/whole_body_kinematic_controller/reference_task/reference_posture_arm_left_1_joint/parameter_descriptions
+/whole_body_kinematic_controller/reference_task/reference_posture_arm_left_1_joint/parameter_updates
+/whole_body_kinematic_controller/right_foot_constraint/parameter_descriptions
+/whole_body_kinematic_controller/right_foot_constraint/parameter_updates
+/whole_body_kinematic_controller/self_collision/collision_lines
+/whole_body_kinematic_controller/self_collision/self_collision/parameter_descriptions
+/whole_body_kinematic_controller/self_collision/self_collision/parameter_updates
+/whole_body_kinematic_controller/torso_height/parameter_descriptions
+/whole_body_kinematic_controller/torso_height/parameter_updates
+/whole_body_kinematic_controller/torso_orientation/parameter_descriptions
+/whole_body_kinematic_controller/torso_orientation/parameter_updates
+
+
+### make a rosservice call to wbc controller
+
+root@cobotat4:/home/user/exchange# rosservice call /whole_body_kinematic_controller/
+/whole_body_kinematic_controller/base_link_orientation/set_parameters
+/whole_body_kinematic_controller/com_XY/com_task_XY/set_parameters
+/whole_body_kinematic_controller/get_stack_description
+/whole_body_kinematic_controller/get_task_error
+/whole_body_kinematic_controller/get_tasks_errors
+/whole_body_kinematic_controller/joint_limit_task/joint_limits/set_parameters
+/whole_body_kinematic_controller/left_foot_constraint/set_parameters
+/whole_body_kinematic_controller/pop_task
+/whole_body_kinematic_controller/push_task
+/whole_body_kinematic_controller/reference_task/reference_posture_arm_left_1_joint/set_parameters
+/whole_body_kinematic_controller/right_foot_constraint/set_parameters
+/whole_body_kinematic_controller/self_collision/self_collision/set_parameters
+/whole_body_kinematic_controller/torso_height/set_parameters
+/whole_body_kinematic_controller/torso_orientation/set_parameters
+
+
+### get wbc controller description
+
+rosservice call /whole_body_kinematic_controller/get_stack_description 
+tasks: 
+  - 
+    name: "joint_limit_task"
+    type: "pal_wbc::JointPositionLimitTask*"
+  - 
+    name: "constraints"
+    type: "pal_wbc::GenericMetaTask*\n     ------------------\n     ID: left_foot_constraint\n\
+  \     Type: pal_wbc::GoToPoseMetaTask*_ left_sole_link\n     ------------------\n\
+  \     ID: right_foot_constraint\n     Type: pal_wbc::GoToPoseMetaTask*_ right_sole_link\n"
+  - 
+    name: "com_XY"
+    type: "pal_wbc::COMKinematicTask*"
+  - 
+    name: "self_collision"
+    type: "pal_wbc::SelfCollisionSafetyKinematicTask*"
+  - 
+    name: "default_reference"
+    type: "pal_wbc::GenericMetaTask*\n     ------------------\n     ID: base_link_orientation\n\
+  \     Type: pal_wbc::GoToOrientationMetaTask*_ base_link\n     ------------------\n\
+  \     ID: torso_orientation\n     Type: pal_wbc::GoToOrientationMetaTask*_ torso_2_link\n\
+  \     ------------------\n     ID: torso_height\n     Type: pal_wbc::GoToPositionMetaTask*_\
+  \ base_link\n     ------------------\n     ID: reference_task\n     Type: pal_wbc::ReferenceKinematicTaskAllJointsMetaTask*\n"
+

@@ -1,11 +1,13 @@
 
-function [LArm, RArm] = compute_joint_positions(new_cart_position,joint_position,d_ik)
+function [LArm, RArm, times] = compute_joint_positions(new_cart_position,joint_position,d_ik,ik_client)
 
     %%%%%%%%%%%%%%%%%%%%
     % Inverse kinematics
     %%%%%%%%%%%%%%%%%%%%
 
 %     global d_ik;
+    
+    t_init = tic;
 
     cart_position = new_cart_position;
 
@@ -28,12 +30,15 @@ function [LArm, RArm] = compute_joint_positions(new_cart_position,joint_position
     right_arm_joint_positions = joint_position.Position(8:14);
     right_arm_joint_names = joint_position.Name(8:14);
 
-    
+    t1 = toc(t_init);
     %%%%%%%%%%%%%%%%%%
     % Inverse kinematics
     %%%%%%%%%%%%%%%%%%
     
-    ik_client = rossvcclient("/compute_ik",'moveit_msgs/GetPositionIK');
+    % creating ik_client takes tke most time (0.16s)
+%     ik_client = rossvcclient("/compute_ik",'moveit_msgs/GetPositionIK');
+
+    t2 = toc(t_init);
     
     ik_req_LArm = rosmessage(ik_client);
     
@@ -89,14 +94,16 @@ function [LArm, RArm] = compute_joint_positions(new_cart_position,joint_position
     ik_req_RArm.IkRequest.PoseStamped.Pose.Orientation.Y = cart_position(2,5);
     ik_req_RArm.IkRequest.PoseStamped.Pose.Orientation.Z = cart_position(2,6);
     ik_req_RArm.IkRequest.PoseStamped.Pose.Orientation.W = cart_position(2,7);
-    
-    
+
+    t3 = toc(t_init);
     if isServerAvailable(ik_client)
         ik_resp_LArm = call(ik_client,ik_req_LArm,"Timeout",10);
         ik_resp_RArm = call(ik_client,ik_req_RArm,"Timeout",10);
     else
         error("Service server not available on network")
     end
+
+    t4 = toc(t_init);
     
     
     if (ik_resp_LArm.ErrorCode.Val) ~= 1 || (ik_resp_RArm.ErrorCode.Val ~= 1)
@@ -106,4 +113,6 @@ function [LArm, RArm] = compute_joint_positions(new_cart_position,joint_position
     
     LArm = ik_resp_LArm.Solution.JointState.Position(15:21);
     RArm = ik_resp_RArm.Solution.JointState.Position(29:35);
+    t5 = toc(t_init);
+    times = [t1, t2-t1, t3-t2, t4-t3, t5-t4];
 end
