@@ -1,5 +1,5 @@
 
-function [LArm, RArm, times] = compute_joint_positions(new_cart_position,joint_position,d_ik,ik_client)
+function [LArm, RArm, times] = compute_joint_positions(new_cart_position,joint_position,d_ik,ik_client,msg_l,msg_r)
 
     %%%%%%%%%%%%%%%%%%%%
     % Inverse kinematics
@@ -30,17 +30,19 @@ function [LArm, RArm, times] = compute_joint_positions(new_cart_position,joint_p
     right_arm_joint_positions = joint_position.Position(8:14);
     right_arm_joint_names = joint_position.Name(8:14);
 
-    t1 = toc(t_init);
+    
     %%%%%%%%%%%%%%%%%%
     % Inverse kinematics
     %%%%%%%%%%%%%%%%%%
     
     % creating ik_client takes tke most time (0.16s)
 %     ik_client = rossvcclient("/compute_ik",'moveit_msgs/GetPositionIK');
+    t1 = toc(t_init);
+    
+%     ik_req_LArm = rosmessage(ik_client);
+    ik_req_LArm = msg_l;
 
     t2 = toc(t_init);
-    
-    ik_req_LArm = rosmessage(ik_client);
     
     ik_req_LArm.IkRequest.RobotState.JointState.Position = left_arm_joint_positions;
     ik_req_LArm.IkRequest.RobotState.JointState.Name = left_arm_joint_names;
@@ -73,7 +75,8 @@ function [LArm, RArm, times] = compute_joint_positions(new_cart_position,joint_p
     
     %%%
     
-    ik_req_RArm = rosmessage(ik_client);
+%     ik_req_RArm = rosmessage(ik_client);
+    ik_req_RArm = msg_r;
     
     % ik_req.IkRequest.Timeout.Sec = int32(5);
     
@@ -114,5 +117,5 @@ function [LArm, RArm, times] = compute_joint_positions(new_cart_position,joint_p
     LArm = ik_resp_LArm.Solution.JointState.Position(15:21);
     RArm = ik_resp_RArm.Solution.JointState.Position(29:35);
     t5 = toc(t_init);
-    times = [t1, t2-t1, t3-t2, t4-t3, t5-t4];
+    times = [t2-t1, t3-t2, t4-t3, t5-t4, t5];
 end

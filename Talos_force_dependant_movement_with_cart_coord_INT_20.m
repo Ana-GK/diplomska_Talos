@@ -54,6 +54,7 @@
 
 % initialize ROS
 
+close all;
 clear all;
 
 rosshutdown;
@@ -309,6 +310,8 @@ pause(2)
 
 % create rosservice client
 ik_client = rossvcclient("/compute_ik",'moveit_msgs/GetPositionIK');
+msg_ik_l = rosmessage(ik_client);
+msg_ik_r = rosmessage(ik_client);
 
 % start timer
 tic;
@@ -317,18 +320,18 @@ tic;
 while strcmp(swi1.Value,'On') % While the button is on
 
     loop_count = loop_count+1;
-    time1 = toc;
+%     time1 = toc;
     t1=0;
     times=[0 0 0 0 0];
-    time_of_iterations(loop_count) = time1;
 
 % % % % %     % get data from force sensor
 % % % % %     FS_data(i,:) = [FT1.force' FT2.force'];
 % % % % %     FS_F(i,:) = [FT1.F' FT2.F'];
-
+    time1 = toc;
     % read the forces
     msg_r = receive(sub_r, 1); % 1 is timeout in seconds
     msg_l = receive(sub_l, 1); % 1 is timeout in seconds
+    time2 = toc;
 
     % save output of the force sensor
     Fl = msg_l.Wrench.Force;
@@ -339,7 +342,9 @@ while strcmp(swi1.Value,'On') % While the button is on
     % create vector of the forces
     FL = [Fl.X, Fl.Y, Fl.Z];
     FR = [Fr.X, Fr.Y, Fr.Z];
-    
+
+    time3 = toc;
+
     % get current quaternions from tftree for left sensor
     trans_left = getTransform(tftree,'base_link','wrist_left_ft_link');
     q_left = trans_left.Transform.Rotation;
@@ -349,9 +354,13 @@ while strcmp(swi1.Value,'On') % While the button is on
     q_right = trans_right.Transform.Rotation;
     quat_right = [q_right.W q_right.X q_right.Y q_right.Z];
 
+    time4 = toc;
+
     % calculate force in the frame of base_link
     F_l = tf_ft2base(quat_left,FL);
     F_r = tf_ft2base(quat_right,FR);
+
+    time5 = toc;
 
 % % % % % %     % for seperate arms
 % % % % % %     F_x_l = F_l(1);
@@ -368,7 +377,7 @@ while strcmp(swi1.Value,'On') % While the button is on
     F_z = F_l(3)+F_r(3) + 2*F_off_z;
 
 
-    time2 = toc;
+%     time2 = toc;
     
     % display forces
 
@@ -376,7 +385,7 @@ while strcmp(swi1.Value,'On') % While the button is on
 
     F_values_for_plot(loop_count,:) = [F_x F_y F_z];
 
-    time3 = toc; % got forces
+%     time3 = toc; % got forces
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -399,7 +408,7 @@ while strcmp(swi1.Value,'On') % While the button is on
         forces_Talos = [0 0 0];
     end
 
-    time4 = toc; % calculated forces
+%     time4 = toc; % calculated forces
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -444,12 +453,12 @@ while strcmp(swi1.Value,'On') % While the button is on
 
     % CALCULATE IK
 
-    time5 = toc;
+%     time5 = toc;
 
     if any(forces_Talos) && ~stop
 
         a=tic;
-        [LArm, RArm, times] = compute_joint_positions(new_cart_position,previous_joints,d_ik,ik_client); % delta_x is the move size
+        [LArm, RArm, times] = compute_joint_positions(new_cart_position,previous_joints,d_ik,ik_client,msg_ik_l,msg_ik_r); % delta_x is the move size
         disp(times);
         t1=toc(a);
 
@@ -489,7 +498,7 @@ while strcmp(swi1.Value,'On') % While the button is on
 
     [stop_movement] = is_limit_reached(new_joints.Position,new_joints.Name);
    
-    time6 = toc; % all calculations
+%     time6 = toc; % all calculations
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -497,10 +506,10 @@ while strcmp(swi1.Value,'On') % While the button is on
 
     if stop_movement ~= 1 % stop_movement is 1 if a joint limit has been reached
 
-        dT1 = 0.5;
-
+        dT1 = 0.1;
+        time6 = toc;
         move(LLeg,RLeg,LArm,RArm,Head,Torso,dT1) % MOVE
-
+        time7 = toc;
         current_cart_position = new_cart_position;
     else
         disp("Stopping this move.")
@@ -508,10 +517,11 @@ while strcmp(swi1.Value,'On') % While the button is on
         new_joints = previous_joints;
     end
 
-    time7 = toc;
+%     time7 = toc;
 
     previous_joints = new_joints;
-
+    
+    time_of_iterations(loop_count) = time1;
     time_of_parts(loop_count,:) = [change time1 time2 time3 time4 time5 time6 time7];
     time_of_ik(loop_count) = t1;
     time_of_ik_parts(loop_count,:) = [times];
@@ -544,7 +554,8 @@ end
 min(tab)
 max(tab)
 
-figure(1)
+fh1 = figure(1);
+fh1.WindowState = 'maximized';
 hold on;
 plot([1:length(tab)],tab,'LineWidth',2,'DisplayName','loop-time')
 plot([1:length(time_of_ik)],time_of_ik,'LineWidth',3,'DisplayName','function compute\_joint\_positions')
@@ -559,25 +570,27 @@ end
 
 tabela=abs(tabela);
 
-figure(2)
+fh2 = figure(2);
+fh2.WindowState = 'maximized';
 hold on
 plot([1:length(tab)],tab,'LineWidth',2,'DisplayName','loop-time')
 % plot([1:length(time_parts)],tabela(:,1),'LineWidth',2,'DisplayName','IK-computing')
-plot([1:length(time_parts)],tabela(:,2),'LineWidth',2,'Marker','o','DisplayName','time1-time2')
+plot([1:length(time_parts)],tabela(:,2),'LineWidth',2,'Marker','o','DisplayName','time1-time2 read forces')
 plot([1:length(time_parts)],tabela(:,3),'LineWidth',2,'Marker','o','DisplayName','time2-time3')
-plot([1:length(time_parts)],tabela(:,4),'LineWidth',2,'Marker','o','DisplayName','time3-time4')
+plot([1:length(time_parts)],tabela(:,4),'LineWidth',2,'Marker','o','DisplayName','time3-time4 getTransform')
 plot([1:length(time_parts)],tabela(:,5),'LineWidth',2,'Marker','o','DisplayName','time4-time5')
-plot([1:length(time_parts)],tabela(:,6),'LineWidth',2,'Marker','o','DisplayName','time5-time6')
-plot([1:length(time_parts)],tabela(:,7),'LineWidth',2,'Marker','o','DisplayName','time6-time7')
+plot([1:length(time_parts)],tabela(:,6),'LineWidth',2,'Marker','o','DisplayName','time5-time6 compute IK')
+plot([1:length(time_parts)],tabela(:,7),'LineWidth',2,'Marker','o','DisplayName','time6-time7 move')
 legend;
 
-figure(3)
+fh3 = figure(3);
+fh3.WindowState = 'maximized';
 hold on
-plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,1),'LineWidth',2,'Marker','o','DisplayName','time0-time1')
-plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,2),'LineWidth',2,'Marker','o','DisplayName','time1-time2')
-plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,3),'LineWidth',2,'Marker','o','DisplayName','time2-time3')
-plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,4),'LineWidth',2,'Marker','o','DisplayName','time3-time4')
-plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,5),'LineWidth',2,'Marker','o','DisplayName','time4-time5')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,1),'LineWidth',2,'Marker','o','DisplayName','time1-time2')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,2),'LineWidth',2,'Marker','o','DisplayName','time2-time3')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,3),'LineWidth',2,'Marker','o','DisplayName','time3-time4')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,4),'LineWidth',2,'Marker','o','DisplayName','time4-time5')
+plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,5),'LineWidth',2,'Marker','o','DisplayName','loop-time')
 legend;
 
 % Display changes in joint positions that occured during the program run
