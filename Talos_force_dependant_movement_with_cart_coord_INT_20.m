@@ -63,6 +63,8 @@ pause(1);
 rosinit;
 pause(1);
 
+change_ft_sensor_frequency();
+
 global pub_Lleg;
 global msg_Lleg;
 global pub_Rleg;
@@ -313,12 +315,16 @@ ik_client = rossvcclient("/compute_ik",'moveit_msgs/GetPositionIK');
 msg_ik_l = rosmessage(ik_client);
 msg_ik_r = rosmessage(ik_client);
 
+node = ros.Node('/testTime');
+pause(0.5)
+r = ros.Rate(node,100);
+
 % start timer
 tic;
-
+reset(r);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while strcmp(swi1.Value,'On') % While the button is on
-
+    
     loop_count = loop_count+1;
 %     time1 = toc;
     t1=0;
@@ -329,8 +335,10 @@ while strcmp(swi1.Value,'On') % While the button is on
 % % % % %     FS_F(i,:) = [FT1.F' FT2.F'];
     time1 = toc;
     % read the forces
-    msg_r = receive(sub_r, 1); % 1 is timeout in seconds
-    msg_l = receive(sub_l, 1); % 1 is timeout in seconds
+%     msg_r = receive(sub_r, 1); % 1 is timeout in seconds
+%     msg_l = receive(sub_l, 1); % 1 is timeout in seconds
+    msg_l = sub_l.LatestMessage;
+    msg_r = sub_r.LatestMessage;
     time2 = toc;
 
     % save output of the force sensor
@@ -520,11 +528,16 @@ while strcmp(swi1.Value,'On') % While the button is on
 %     time7 = toc;
 
     previous_joints = new_joints;
-    
+%     time6 = toc;
+    drawnow;
+%     time7 = toc;
     time_of_iterations(loop_count) = time1;
     time_of_parts(loop_count,:) = [change time1 time2 time3 time4 time5 time6 time7];
     time_of_ik(loop_count) = t1;
     time_of_ik_parts(loop_count,:) = [times];
+    waitfor(r);
+
+%     disp(swi1.Value)
 
 end
 
@@ -592,6 +605,8 @@ plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,3),'LineWidth',2,'Marker','
 plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,4),'LineWidth',2,'Marker','o','DisplayName','time4-time5')
 plot([1:length(time_of_ik_parts)],time_of_ik_parts(:,5),'LineWidth',2,'Marker','o','DisplayName','loop-time')
 legend;
+
+close(fig)
 
 % Display changes in joint positions that occured during the program run
 

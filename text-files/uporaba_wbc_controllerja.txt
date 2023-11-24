@@ -1,0 +1,63 @@
+rviz -> Add InteractiveMarkers
+
+rosservice call /controller_manager/switch_controller "start_controllers:
+- ''
+stop_controllers:
+- 'force_torque_sensor_controller'
+strictness: 0" 
+
+rosservice call /controller_manager/unload_controller "name: 'force_torque_sensor_controller'"
+
+rosparam set /force_torque_sensor_controller/publish_rate 1000
+
+
+rosservice call /controller_manager/load_controller "name: 'force_torque_sensor_controller'" 
+
+rosservice call /controller_manager/switch_controller "stop_controllers:
+- ''
+start_controllers:
+- 'force_torque_sensor_controller'
+strictness: 0" 
+
+
+rostopic hz /right_wrist_ft
+
+# change script for creating "wbc topic"
+
+vi src/wbc_stack_examples/src/push_pose_task.cpp
+
+catkin build
+
+source ./devel/setup.bash
+
+rosrun wbc_stack_examples push_pose_task
+
+rostopic pub /whole_body_kinematic_controller/reference_ref geometry_msgs/PoseStamped "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: 'odom'
+pose:
+  position:
+    x: 0.0
+    y: 0.0
+    z: -0.5
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0" 
+    
+cat src/wbc_stack_examples/src/push_pose_task.cpp
+vi src/wbc_stack_examples/src/push_pose_task.cpp # Insert za spreminjanje, Esc in :wq! za izhod
+
+# Zaporedje kontrolerjev
+
+roslaunch talos_controller_configuration_gazebo default_controllers.launch 
+
+roslaunch talos_wbc talos_wbc.launch 
+
+roslaunch talos_wbc talos_wbc.launch stack:=talos_wbc_subsampled_stabilized
+
+rosrun wbc_stack_examples push_pose_task
