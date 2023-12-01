@@ -1,5 +1,7 @@
 rviz -> Add InteractiveMarkers
 
+############ change force_torque_sensor_controller frequency
+
 rosservice call /controller_manager/switch_controller "start_controllers:
 - ''
 stop_controllers:
@@ -9,7 +11,6 @@ strictness: 0"
 rosservice call /controller_manager/unload_controller "name: 'force_torque_sensor_controller'"
 
 rosparam set /force_torque_sensor_controller/publish_rate 1000
-
 
 rosservice call /controller_manager/load_controller "name: 'force_torque_sensor_controller'" 
 
@@ -21,6 +22,8 @@ strictness: 0"
 
 
 rostopic hz /right_wrist_ft
+
+############
 
 # change script for creating "wbc topic"
 
@@ -61,3 +64,21 @@ roslaunch talos_wbc talos_wbc.launch
 roslaunch talos_wbc talos_wbc.launch stack:=talos_wbc_subsampled_stabilized
 
 rosrun wbc_stack_examples push_pose_task
+
+# add to CMakeLists.txt
+
+add_executable(push_pose_task1 src/push_pose_task1.cpp)
+target_link_libraries(push_pose_task1 ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+add_executable(push_pose_task2 src/push_pose_task2.cpp)
+target_link_libraries(push_pose_task2 ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+
+##
+
+rosrun wbc_stack_examples push_pose_task
+
+rosrun wbc_stack_examples push_pose_task1
+
+
+

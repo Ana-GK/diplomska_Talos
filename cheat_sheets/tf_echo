@@ -1,0 +1,9 @@
+wrist_right_ft_tool_link
+
+base_link
+
+
+
+rosrun tf tf_echo wrist_right_ft_tool_link base_link
+
+rosrun tf tf_echo wrist_left_ft_tool_link base_link

@@ -26,8 +26,8 @@ function [link_names, coordinates] = compute_cart_positions_wbc(joint_positions,
     % Create message of the correct type for this service
     fk_req_LArm = rosmessage(fk_client); % create a message
     
-%     fk_req_LArm.Header.FrameId = 'base_link'; % using coordinate system of the base
-    fk_req_LArm.Header.FrameId = 'odom'; % using coordinate system of the base
+    fk_req_LArm.Header.FrameId = 'base_link'; % using coordinate system of the base
+%     fk_req_LArm.Header.FrameId = 'odom';
     fk_req_LArm.FkLinkNames = {'arm_left_1_link', 'arm_left_2_link', 'arm_left_3_link', 'arm_left_4_link', 'arm_left_5_link', 'arm_left_6_link', 'arm_left_7_link'};
     
     fk_req_LArm.RobotState.JointState.Name = left_arm_joint_names;
@@ -38,8 +38,8 @@ function [link_names, coordinates] = compute_cart_positions_wbc(joint_positions,
     % Create message of the correct type for this service
     fk_req_RArm = rosmessage(fk_client);
     
-%     fk_req_RArm.Header.FrameId = 'base_link';
-    fk_req_RArm.Header.FrameId = 'odom';
+    fk_req_RArm.Header.FrameId = 'base_link';
+%     fk_req_RArm.Header.FrameId = 'odom';
     fk_req_RArm.FkLinkNames = {'arm_right_1_link', 'arm_right_2_link', 'arm_right_3_link', 'arm_right_4_link', 'arm_right_5_link', 'arm_right_6_link', 'arm_right_7_link'};
     
     fk_req_RArm.RobotState.JointState.Name = right_arm_joint_names;

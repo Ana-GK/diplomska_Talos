@@ -1,0 +1,43 @@
+#####################################################
+How to use wbc_controllers
+#####################################################
+
+# add wbc_stack_examples to catkin_ws from https://repo.ijs.si/hcr/talos/wbc_stack_examples.git
+
+clone https://repo.ijs.si/hcr/talos/wbc_stack_examples.git
+
+# replace CMakeLists.txt
+# replace push_pose_task.cpp
+# add push_pose_task1.cpp
+
+rm CMakeLists.txt
+vi src/wbc_stack_examples/src/push_pose_task.cpp # Insert za spreminjanje, Esc in :wq! za izhod
+
+catkin build # or catkin_make (from catkin_ws folder), nujno vsakic po spremembi
+
+source ./devel/setup.bash # nujno
+
+#####################################################
+
+# Zagon kontrolerjev:
+
+catkin build
+
+source ./devel/setup.bash
+
+# 1. default controllerji (za zacetno pozicijo)
+
+# 2. wbc controllers:
+roslaunch talos_wbc talos_wbc.launch 
+
+# 3. stabilized wbc controllers:
+roslaunch talos_wbc talos_wbc.launch stack:=talos_wbc_subsampled_stabilized
+
+
+
+# zagon skript:
+
+# 1.
+rosrun wbc_stack_examples push_pose_task
+# 2.
+rosrun wbc_stack_examples push_pose_task1
